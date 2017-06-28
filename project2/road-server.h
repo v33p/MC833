@@ -12,6 +12,8 @@ struct car {
     int position;
     int x_direction;
     int y_direction;
+    float time_in;
+    float time_out;
 };
 typedef struct car car;
 
