@@ -3,14 +3,40 @@
 int main (int argc, char** argv) {
     setupServer();
     
-    
-    
 //    map road = readMap();    
 //    car* cars[MAXCARS];
 //       
 //    printMap (road); 
 
     return EXIT_SUCCESS;
+}
+
+void calculateIntervals (map road, car* cars) {
+    for (int i = 0; i < MAXCARS; i++) {
+        if (cars[i].xdirection != 0) {
+            cars[i].time_in = float(road.xcross - cars[i].position)/float(cars[i].speed);
+            cars[i].time_out = cars[i].time_in + (1.0/float(cars[i].speed));
+        }
+        else {
+            cars[i].time_in = float(road.ycross - cars[i].position)/float(cars[i].speed);
+            cars[i].time_out = cars[i].time_in + (1.0/float(cars[i].speed));
+        }
+    }
+}
+
+void updateCarPosition (map road, car c, newposition, delay) {
+    c.position = newposition + (2 * delay * float(c.speed));
+}
+
+void updateMapPosition (map road, car* cars) {
+   for (int i = 0; i < MAXCARS; i++) {
+       if (cars[i].xdirection != 0) {
+            
+       }
+       else {
+            
+       }
+   }
 }
 
 int setupServer() {
@@ -145,28 +171,6 @@ int setupServer() {
     
     return 0;
 }
-
-//void calculateIntervals (map road, car* cars) {
-//    for (int i = 0; i < MAXCARS; i++) {
-//	if (cars[i].x_direction != 0) {
-//     	    cars[i].time_in = float(road.xcross - cars[i].position)/float(cars[i].speed);
-//    	    cars[i].time_out = cars[i].time_in + (1.0/float(cars[i].speed));
-//        }
-//	else {
-//     	    cars[i].time_in = float(road.ycross - cars[i].position)/float(cars[i].speed);
-//    	    cars[i].time_out = cars[i].time_in + (1.0/float(cars[i].speed));
-//        }
-//    }
-//}
-
-//void updateCarPosition (map road, car c, newposition, delay) {
-//    if (c.x_direction != 0) {
-//    
-//    }
-//    else {
-//	
-//    }
-//}
 
 map readMap () {
     map road;
