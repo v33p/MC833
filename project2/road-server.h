@@ -24,7 +24,6 @@ void receivingMsgCar (int socket, Car car, int type);
 void sendingMsgCar (Car car, Order order);
 
 // ALGORITHM FUNCTIONS
-void initiateMap ();
 void algorithmFIFO ();
 int calculateSpeedToFit (Car c, float out);
 void updateCarIntervalsBySpeed (Car* c, int new_speed);
@@ -36,3 +35,4 @@ void updateAllCarsIntervals ();
 int compareTimeIn (const void * a, const void * b);
 void increaseCars ();
 void decreaseCars (int exclude);
+void printCars ();

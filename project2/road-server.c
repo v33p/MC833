@@ -119,23 +119,9 @@ int setupServer() {
                     clients[i] = -1;
                 } else {
                     /* imprime ip e porta do cliente, e as informacoes do carro */
-                    print("Received new message!", &car, socket_address);
+                    print("Received new message!", &m.car, socket_address);
 
-                    // TODO: Ajustar conforme necessidades.
                     receivingMsgCar(clients[i], m.car, m.type);
-                    
-                    // TODO: Voce pode manter um vetor de carros, e sempre que receber um message, atualiza na posicao correspondente (utilize variavel i para isso). Depois, calcular os conflitos e enviar mensagem para os carros acelerarem ou frearem, quando necessario
-                   /* 
-                    for (j = 0; j <= cliente_num; j++) {
-                        if ( i == j || (socks = clients[j] ) < 0) continue;
-                        
-                        Order order;
-                        order.acceleration = 1;
-                        
-                        if (write(socks, &order, sizeof(Order)) < 0) {
-                            printf("error: writting problem\n");
-                        }
-                    }*/
                 }
                 
                 // não há mais descritores para ler
@@ -187,13 +173,6 @@ void sendingMsgCar (Car car, Order order) {
 //
 // ALGORITHM FUNCTIONS
 //
-void initiateMap () {
-    road.x_size = 9;
-    road.y_size = 9;
-    road.x_cross = 5;
-    road.y_cross = 5;
-}
-
 void algorithmFIFO () {
     qsort (cars, n_cars, sizeof(Car), compareTimeIn);
     
@@ -287,6 +266,7 @@ void increaseCars () {
     free (cars);
     cars = new;
     n_cars++;
+    printCars ();
 }
 
 void decreaseCars (int exclude) {
@@ -308,4 +288,12 @@ void decreaseCars (int exclude) {
     free (cars);
     cars = new;
     n_cars--;
+}
+
+void printCars () {
+    printTitle ("Car Vectors");
+    for (int i = 0; i < n_cars; i++) {
+        printf ("Carro %d: %d\n", i, cars[i].index);
+    }
+    printTitle (""); 
 }

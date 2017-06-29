@@ -7,6 +7,7 @@ int main(int argc, char * argv[]) {
     char *host;
 
     initializeCar ();
+    initiateMap ();
 
     // check if host was passed as an argument
     if (argc != 2) {
@@ -133,7 +134,6 @@ void setupSecurityLayer(struct hostent *host_address) {
         exit(1);
     }
     
-    Car car;
     Order order;
     
     pid_t pid;
@@ -166,10 +166,11 @@ void setupSecurityLayer(struct hostent *host_address) {
         printf("error: couldn't connect\n");
         close(s);
         exit(2);
-    }
-    
+    }   
     print("Connected!", NULL, socket_address);
     
+    connectedToServer ();
+
     // try fork
     if ((pid = fork()) < 0) {
         perror("error forking");
@@ -178,24 +179,17 @@ void setupSecurityLayer(struct hostent *host_address) {
     
     if (pid == 0) {
         // Process to calculate my new position
-        
-        time_t start_time = time (NULL);
+        int now = 0; 
         while (1) {
             
             // LOOP DE MOVIMENTO
             
-            time_t now = time(NULL);
-            time_t diff = now - start_time;
-
-            if (((diff * 10) % (int) (CLOCK * 10)) == 0) {
-                driving(); 
-            }
-
-            if ((diff % UPDATE_TIMER) == 0) {
-                update();
-            }
+            driving(); 
             
-            //sleep(1);
+            now++;
+            if (now % 10 == 0) update(); 
+            
+            sleep(1);
         }
         
     } else {
@@ -216,13 +210,18 @@ void setupSecurityLayer(struct hostent *host_address) {
     exit(0);
 }
 
+// connectedToServer (): Eh chamada toda vez que se conecta com o carro eh conectado com o servidor,
+// na funcao, o carro escreve uma mensagem de cadastramento pro server e envia suas informacoes
 void connectedToServer () {
+    printf ("Road: %d %d\n", road.x_size, road.y_size);
     Message m;
     m.type = 1;
     m.car = self;
     sendingMsg (m);
 }
 
+// desconnectFromServer (): Essa funcao serve para desconectar o carro do server, nela, o carro
+// escreve uma mensagem de descadastramento pro server e envia suas informacoes
 void desconnectFromServer () {
     Message m;
     m.type = -1;
@@ -231,6 +230,8 @@ void desconnectFromServer () {
     exit (0);
 }
 
+// receivingMsg (Order o): Essa funcao eh chamada toda vez que o carro recebe uma nova ordem do
+// servidor, o carro entao filtra a msg pelo tipo e se necessario executa a ordem do server.
 void receivingMsg (Order o) {
     switch (o.type) {
         case -1:
@@ -242,14 +243,16 @@ void receivingMsg (Order o) {
     }
 }
 
+// sendingMsg (Message m): Essa funcao envia mensagem m passada como parametro para o servidor.
 void sendingMsg (Message m) {
     if (write(s, &m, sizeof(Message)) < 0) {
         printf ("error: writing problem\n");
     }
 }
 
-
 // ALGORITHM
+
+// initializeCar (): Essa funcao inicia um carro com valores aleatorios e printa os valores.
 void initializeCar () {
     srand (time(NULL));
 
@@ -276,33 +279,84 @@ void initializeCar () {
         }
     }
 
+    printTitle ("Initial Settings");
+    printCar (&self);
 }
 
+// driving (): Essa funcao eh chamada todo loop de movimento, nela o carro recalcula a sua
+// posicao baseado na velocidade atual do carro, esta funcao tambem detecta quando o carro
+// chega no final da road e quando chega no cruzamento.
 void driving () {
     if (self.x_direction != 0) {
-        self.position = self.position + (CLOCK * ((float) self.speed * self.x_direction));
-        if (self.position - (float) road.x_cross < (float) self.length / 2 || 
-                (float) road.x_cross - self.position < (float) self.length / 2) {
-            // esta no cruzamento
-            printf ("Crossing!\n"); 
+        float old_position = self.position;
+        self.position = self.position + ((float) self.speed * self.x_direction);
+
+        // verifica se esta atravessando cruzamento
+        if (self.x_direction < 0) {
+            if (self.position < (float) road.x_cross && 
+                    self.position + ((float) -self.x_direction * self.length) > (float) road.x_cross) {
+                // esta passando no cruzamento
+                crossingRoad ();
+            }
         }
-        if (self.position > (float) road.x_size || self.position < 0) desconnectFromServer ();
+        else {
+            if (self.position > (float) road.x_cross && 
+                    self.position + ((float) -self.x_direction * self.length) < (float) road.x_cross) {
+                // esta passando no cruzamento
+                crossingRoad ();
+            }
+        }
+
+        if (self.position > (float) road.x_size || self.position < 0) 
+            endOfTheRoad ();
     }
     else {
-        self.position = self.position + (CLOCK * ((float) self.speed * self.y_direction));
-        if (self.position - (float) road.y_cross < (float) self.length / 2 || 
-                (float) road.y_cross - self.position < (float) self.length / 2) {
-            // esta no cruzamento
-            printf ("Crossing!\n"); 
+        self.position = self.position + ((float) self.speed * self.y_direction);
+        
+        // verifica se esta atravessando cruzamento
+        if (self.y_direction < 0) {
+            if (self.position < (float) road.y_cross && 
+                    self.position + ((float) -self.y_direction * self.length) > (float) road.y_cross) {
+                // esta passando no cruzamento
+                crossingRoad ();
+            }
         }
-        if (self.position > (float) road.y_size || self.position < 0) desconnectFromServer ();
+        else {
+            if (self.position > (float) road.y_cross && 
+                    self.position + ((float) -self.y_direction * self.length) < (float) road.y_cross) {
+                // esta passando no cruzamento
+                crossingRoad ();
+            }
+        }
+        
+        if (self.position > (float) road.y_size || self.position < 0) 
+            endOfTheRoad ();
     }
+    printf ("Position: %f\n", self.position);
 }
 
+// endOfTheRoad (): Essa funcao eh chamada toda vez que o carro chega a uma extremidade
+// da road. Por enquanto, ela simplesmente faz o carro voltar no sentido contrario
+void endOfTheRoad () {
+    self.x_direction = -self.x_direction; 
+    self.y_direction = -self.y_direction; 
+}
+
+// crossingRoad (): Essa funcao eh chamada toda vez que o carro esta atravessando a rua
+void crossingRoad () {
+    printf ("Crossing\n");
+}
+
+// adjustSpeed (int new_speed): Essa funcao atualiza o valor de velocidade do carro e printa
+// os valores do carro.
 void adjustSpeed (int new_speed) {
     self.speed = new_speed;
+    printTitle ("My Car Settings");
+    printCar (&self);
 }
 
+// update (): Nessa funcao o carro envia suas informacoes para o servidor, ela eh chamada no 
+// loop de movimento tambem.
 void update () {
     Message m;
     m.car = self;
