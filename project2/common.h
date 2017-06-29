@@ -21,6 +21,10 @@ typedef struct {
     float time_out;
 } Car;
 
+typedef struct {
+    int acceleration;
+} Order;
+
 struct map { 
     int x_size;
     int y_size;

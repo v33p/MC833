@@ -155,10 +155,11 @@ int setupServer() {
                     for (j = 0; j <= cliente_num; j++) {
                         if ( i == j || (socks = clients[j] ) < 0) continue;
                         
-                        if (write(socks, &car, sizeof(Car)) < 0) {
+                        Order order;
+                        order.acceleration = 1;
+                        
+                        if (write(socks, &order, sizeof(Order)) < 0) {
                             printf("error: writting problem\n");
-                        } else {
-                            printf("ENVIADO\n");
                         }
                     }
                 }
@@ -170,6 +171,10 @@ int setupServer() {
     }
     
     return 0;
+}
+
+void acceptConnection() {
+    
 }
 
 map readMap () {

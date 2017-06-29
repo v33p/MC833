@@ -1,16 +1,7 @@
 #include "car.h"
 
 int main(int argc, char * argv[]) {
-    Car car;
-    
-    pid_t pid;
-    
-    struct hostent *host_address;
-    struct sockaddr_in socket_address;
     char *host;
-    char buf[MAX_LINE];
-    int s;
-    int len;
     
     // Verificacao de argumentos
     if (argc != 2) {
@@ -21,12 +12,37 @@ int main(int argc, char * argv[]) {
         host = argv[1];
     }
     
+    setupSecurityLayer(host)
+    
+    return 0;
+}
+
+void setupSecurityLayer(char *host) {
+    
+    // Lock
+    pthread_mutex_t lock;
+    if (pthread_mutex_init(&lock, NULL) != 0){
+        printf("\n mutex init failed\n");
+        return 1;
+    }
+    
+    Car car;
+    Order order;
+    
+    pid_t pid;
+    
+    struct hostent *host_address;
+    struct sockaddr_in socket_address;
+    char buf[MAX_LINE];
+    int s;
+    int len;
+    
     // resolvendo nomes
     host_address = gethostbyname(host);
     
     if (!host_address) {
         printf("error: couldn't resolve name");
-        return 1;
+        exit(1);
     }
     
     // copiando endereco para string
@@ -38,7 +54,7 @@ int main(int argc, char * argv[]) {
     // criacao do socket
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         printf("error: socket problem\n");
-        return 1;
+        exit(1);
     }
     
     // criacao da estrutura de dados de endereco
@@ -52,22 +68,23 @@ int main(int argc, char * argv[]) {
     if (connect(s, (struct sockaddr *)&socket_address, sizeof socket_address) < 0) {
         printf("error: couldn't connect\n");
         close(s);
-        return 2;
+        exit(2);
     }
     
     print("Connected!", NULL, socket_address);
     
-    
+    // try fork
     if ((pid = fork()) < 0) {
         perror("error forking");
         exit(1);
     }
     
     if (pid == 0) {
+        // Process to calculate my new position
         
-        // ler e enviar as linhas de texto
-        printTitle("PRESS s to stop: ");
         while (1) {
+            // TODO: MUST CALCULATE CAR NEW POSITION
+            adjustPosition();
             car.speed       = 10;
             car.position    = 0;
             car.length      = 1;
@@ -86,17 +103,20 @@ int main(int argc, char * argv[]) {
         }
         
     } else {
+        // Process for waiting orders from server
         
         while (1) {
             
             printTitle("Waiting for orders...");
-            if ( (len = read(s, &car, sizeof(Car))) == 0) {
+            // TODO MUST BE DEFINED HOW ORDERS WILL BE MADE
+            if ( (len = read(s, &order, sizeof(Order))) == 0) {
                 // disconnected
                 printTitle("Disconnected!");
                 exit(0);
             } else {
                 // atualize velocidade do carro, de acordo com instrucoes recebidas
                 printTitle("Adjusting speed!");
+                adjustSpeed(&car, order);
             }
             
         }
@@ -107,5 +127,24 @@ int main(int argc, char * argv[]) {
     
     // fechando a sessao
     close(s);
-    return 0;
+    exit(0);
 }
+
+void adjustSpeed(Car *car, Order order) {
+    switch (order) {
+        case 1:
+            printf("must accelerate");
+            break;
+        case -1:
+            printf("must brake");
+            break
+        default:
+            printf("do nothing");
+            break;
+    }
+}
+
+void adjustPosition(Car *car) {
+    
+}
+
