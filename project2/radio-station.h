@@ -8,6 +8,7 @@
 typedef struct {
     int *clients;
     int *num_clients;
+    struct sockaddr_in *socket_address;
 } Handler;
 
 // Functions

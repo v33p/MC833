@@ -17,6 +17,10 @@
 #define min(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _b : _a; })
 #define RADIO 10001
 
+#define TRAFFIC 10002
+#define VISIBILITY 10
+#define MIN_VISIBILITY 3
+
 // STRUCTS
 
 typedef struct {

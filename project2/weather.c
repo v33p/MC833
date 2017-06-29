@@ -1,7 +1,10 @@
-#include "radio-station.h"
+#include "weather.h"
 
 int main(int argc , char *argv[]) {
     int message;
+    
+    srand( (unsigned) time(NULL) );
+    int visibility = rand() % (VISIBILITY + 1);
     
     struct sockaddr_in socket_address;
     unsigned int len;
@@ -9,12 +12,6 @@ int main(int argc , char *argv[]) {
     
     int i, j, sockfd, num_clients, maxfd, nready, clients[FD_SETSIZE];
     fd_set todos_fds, novo_set;
-    
-    Handler handler;
-    handler.num_clients = &num_clients;
-    handler.clients = clients;
-    handler.socket_address = &socket_address;
-    
     
     // create socket
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
@@ -25,7 +22,7 @@ int main(int argc , char *argv[]) {
     // create socket address
     bzero((char *)&socket_address, sizeof(socket_address));
     socket_address.sin_family = AF_INET;
-    socket_address.sin_port   = htons(RADIO);
+    socket_address.sin_port   = htons(TRAFFIC);
     
     if (INADDR_ANY)
         socket_address.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -46,9 +43,10 @@ int main(int argc , char *argv[]) {
     FD_ZERO(&todos_fds);
     FD_SET(s, &todos_fds);
     
-    // thread to send information to all connected clients
+    
+    // thread to set weather
     pthread_t sniffer_thread;
-    if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) &handler ) < 0) {
+    if( pthread_create( &sniffer_thread , NULL ,  weather_handler , (void*) &visibility ) < 0) {
         perror("could not create thread");
         return 1;
     }
@@ -112,6 +110,12 @@ int main(int argc , char *argv[]) {
                     close(sockfd);
                     FD_CLR(sockfd, &todos_fds);
                     clients[i] = -1;
+                } else {
+                    print("Driver looked at me.", NULL, socket_address);
+                    
+                    if (write(sockfd, &visibility, sizeof(visibility)) < 0) {
+                        printf ("error: writing problem\n");
+                    }
                 }
                 
                 // there are no more descriptors to read
@@ -124,34 +128,22 @@ int main(int argc , char *argv[]) {
     return 0;
 }
 
-/*
- * This will send message for all clients
- * */
-void *connection_handler(void *pointer) {
-    Handler *handler = (Handler*) pointer;
-    
-    // text to be transmitted to bored drivers in transit
-    FILE *file = fopen("entertainment.txt", "r");
-    char buf[RADIO_BUFFER];
-    
-    int i;
-    int socket;
+void *weather_handler(void *pointer) {
+    int *visibility = (int*) pointer;
     
     while (1) {
-        // get text
-        if (fgets(buf, sizeof(buf), file) == NULL) {
-            rewind(file);
-            continue;
+        if (rand() % 2) {
+            // visibility are better
+            *visibility = min((*visibility + 1), VISIBILITY);
+        } else {
+            // visibility are worse
+            *visibility = max((*visibility - 1), 0);
         }
+        printTitle("Weather Condition:");
+        printf("( 0 <-> 10 ) %d\n", *visibility);
         
-        // send for all drivers
-        for (i = 0; i <= *(handler->num_clients); i++) {
-            if ( (socket = (handler->clients)[i] ) < 0) continue;
-            sendto(socket, buf, strlen(buf), 0, (struct sockaddr*) handler->socket_address, sizeof(*handler->socket_address));
-        }
-        
-        // wait (miliseconds), giving enough time to driver to read text.
-        sleep_ms(200);
+        // wait (miliseconds) to calculate new conditions
+        sleep_ms(1000);
     }
     
     return 0;

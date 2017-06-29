@@ -31,9 +31,90 @@ int main(int argc, char * argv[]) {
         return 1;
     }
     
+    // start weather layer
+    pthread_t sniffer_thread2;
+    if( pthread_create( &sniffer_thread2 , NULL ,  setupTrafficLayer , (void*) host_address ) < 0) {
+        perror("could not create thread");
+        return 1;
+    }
+    
     // start security layer
     setupSecurityLayer(host_address);
     
+    return 0;
+}
+
+// LAYER
+// TRAFFIC
+void *setupTrafficLayer(void *pointer) {
+    
+    // socket variables
+    struct hostent *host_address = (struct hostent *) pointer;
+    struct sockaddr_in socket_address;
+    
+    int sock;
+    unsigned int visibility;
+    
+    while (1) {
+        
+        printTitle("Starting Traffic Layer...");
+        
+        // create socket
+        sock = socket(AF_INET , SOCK_STREAM , 0);
+        if (sock == -1) {
+            printTitle("Could not create socket");
+            
+            sleep(5);
+            continue;
+        }
+        
+        // setting server socket address
+        struct in_addr a;
+        while (*host_address->h_addr_list) {
+            bcopy(*host_address->h_addr_list++, (char *) &a, sizeof(a));
+        }
+        
+        socket_address.sin_addr.s_addr = inet_addr(inet_ntoa(a));
+        socket_address.sin_family = AF_INET;
+        socket_address.sin_port = htons( TRAFFIC );
+        
+        // connect to remote server
+        if (connect(sock , (struct sockaddr *)&socket_address , sizeof(socket_address)) < 0) {
+            printTitle("Maybe Traffic is off. Try again!");
+            exit(0);
+        }
+        
+        // keep seeing how is traffic conditions
+        print("Started Traffic Layer!", NULL, socket_address);
+        while(1) {
+            
+            if (write(sock, &sock, sizeof(int)) < 0) {
+                printf ("error: writing problem\n");
+            }
+            
+            if( recv(sock , &visibility , sizeof(visibility), 0) > 0) {
+                
+                if (MIN_VISIBILITY < visibility) {
+                    printTitle("Traffic Layer:\nTraffic Conditions are good. Headlights are off.");
+                } else {
+                    printTitle("Traffic Layer:\nTraffic Conditions are bad. Headlights are on.");
+                }
+                
+            } else {
+                printTitle("Stopped Traffic Layer.");
+                break;
+            }
+            
+            sleep(2);
+            
+        }
+        
+        // radio was disconnected, let's try connecting again
+        close(sock);
+        
+    }
+    
+    // never executed. entertainment layer will be running while application is running
     return 0;
 }
 
@@ -48,9 +129,9 @@ void *setupEntertainmentLayer(void *pointer) {
     
     // socket variables
     struct hostent *host_address = (struct hostent *) pointer;
-    int sock;
-    
     struct sockaddr_in socket_address;
+    
+    int sock, socklen = sizeof(socket_address);
     char information[ENTERTAINMENT_INFORMATION];
     
     while (1) {
@@ -77,7 +158,7 @@ void *setupEntertainmentLayer(void *pointer) {
         socket_address.sin_port = htons( RADIO );
         
         // connect to remote server
-        if (connect(sock , (struct sockaddr *)&socket_address , sizeof(socket_address)) < 0) {
+        if (connect(sock , (struct sockaddr *)&socket_address , socklen) < 0) {
             printTitle("Maybe Radio Station is off. Sorry!");
             
             sleep(5);
@@ -91,7 +172,7 @@ void *setupEntertainmentLayer(void *pointer) {
         
         while(1) {
             
-            if( recv(sock , information , ENTERTAINMENT_INFORMATION , 0) > 0) {
+            if( recvfrom(sock, information, ENTERTAINMENT_INFORMATION, 0, (struct sockaddr *) &socket_address, (socklen_t*)&socklen) > 0) {
                 // append information to buffer
                 
                 strcat(buffer, information);
