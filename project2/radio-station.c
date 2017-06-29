@@ -1,7 +1,5 @@
 #include "radio-station.h"
 
-#include <sys/socket.h>
-
 int main(int argc , char *argv[]) {
     int message;
     
@@ -132,20 +130,30 @@ int main(int argc , char *argv[]) {
  * */
 void *connection_handler(void *pointer) {
     Handler *handler = (Handler*) pointer;
-    char *message;
+    
+    // Text to be transmitted to bored drivers in transit
+    FILE *file = fopen("entertainment.txt", "r");
+    char buf[100];
     
     int i;
     int socket;
     
+    
     while (1) {
-        for (i = 0; i <= *(handler->num_clients); i++) {
-            if ( (socket = (handler->clients)[i] ) < 0) continue;
-            
-            message = "Now type something and i shall repeat what you type \n";
-            write(socket , message , strlen(message));
+        // Get text
+        if (fgets(buf, sizeof(buf), file) == NULL) {
+            rewind(file);
+            continue;
         }
         
-        sleep(1);
+        // Send for all drivers
+        for (i = 0; i <= *(handler->num_clients); i++) {
+            if ( (socket = (handler->clients)[i] ) < 0) continue;
+            write(socket , buf , strlen(buf));
+        }
+        
+        // Wait, giving enough time to driver to read text.
+        sleep(3);
     }
     
     return 0;
