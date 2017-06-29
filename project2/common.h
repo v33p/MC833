@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// include for extras
+#include <time.h>
+
 // includes for networking
 #include <string.h>
 #include <unistd.h>
@@ -25,12 +28,19 @@ typedef struct {
     float time_in;
     float time_out;
     int index;
+    int socket;
 } Car;
 
 typedef struct {
     int acceleration;
     int speed;
+    int type;
 } Order;
+
+typedef struct {
+    Car car;
+    int type;
+} Message;
 
 struct map { 
     int x_size;
@@ -40,6 +50,7 @@ struct map {
 };
 typedef struct map map;
 
+map road;
 
 void printTitle(char *title) {
     printf("-----------------------------------\n");

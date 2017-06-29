@@ -16,7 +16,8 @@ int setupServer() {
     int s, new_s;
     
     Car car;
-    
+    Message m;
+
     int i, j;
     
     int sockfd, socks, cliente_num, maxfd, nready, clients[FD_SETSIZE];
@@ -109,21 +110,22 @@ int setupServer() {
             if ( (sockfd = clients[i] ) < 0) continue;
             
             if (FD_ISSET(sockfd, &novo_set)) {
-                if ( (len = recv(sockfd, &car, sizeof(Car), 0)) == 0) {
+                if ( (len = recv(sockfd, &m, sizeof(Message), 0)) == 0) {
                     //conexão encerrada pelo cliente
                     print("Client terminated!", NULL, socket_address);
                     close(sockfd);
                     FD_CLR(sockfd, &todos_fds);
+                    clientDesconnected (clients[i]); 
                     clients[i] = -1;
                 } else {
                     /* imprime ip e porta do cliente, e as informacoes do carro */
                     print("Received new message!", &car, socket_address);
-                    
+
                     // TODO: Ajustar conforme necessidades.
-                    receivingMsgCar(car, 0);
+                    receivingMsgCar(clients[i], m.car, m.type);
                     
                     // TODO: Voce pode manter um vetor de carros, e sempre que receber um message, atualiza na posicao correspondente (utilize variavel i para isso). Depois, calcular os conflitos e enviar mensagem para os carros acelerarem ou frearem, quando necessario
-                    
+                   /* 
                     for (j = 0; j <= cliente_num; j++) {
                         if ( i == j || (socks = clients[j] ) < 0) continue;
                         
@@ -133,7 +135,7 @@ int setupServer() {
                         if (write(socks, &order, sizeof(Order)) < 0) {
                             printf("error: writting problem\n");
                         }
-                    }
+                    }*/
                 }
                 
                 // não há mais descritores para ler
@@ -145,20 +147,26 @@ int setupServer() {
     return 0;
 }
 
-void newCarConnected (Car new_car) {
+void newCarConnected (int socket, Car new_car) {
     increaseCars ();
     cars[n_cars-1] = new_car;
     cars[n_cars-1].index = current_index++;
+    cars[n_cars-1].socket = socket;
+}
+
+void clientDesconnected (int socket) {
+    for (int i = 0; i < n_cars; i++)
+        if (cars[i].socket == socket) carDesconnected (cars[i]);
 }
 
 void carDesconnected (Car car) {
     decreaseCars (car.index);
 }
 
-void receivingMsgCar (Car car, int type) {
+void receivingMsgCar (int socket, Car car, int type) {
     switch (type) {
         case 1:
-            newCarConnected (car);
+            newCarConnected (socket, car);
             break;
         case -1:
             carDesconnected (car); 
@@ -168,12 +176,12 @@ void receivingMsgCar (Car car, int type) {
             algorithmFIFO ();
             break;
     }
-    
 }
 
-void sendingMsgCar (Car car, int type, Order order) {
-    // Ajustar para enviar msg do servidor para o cliente car
-    // car.index e um valor unico para esse carro na aplicacao inteira
+void sendingMsgCar (Car car, Order order) {
+    if (write (car.socket, &order, sizeof(Order))) {
+        printf ("error: writting problem\n");
+    }
 }
 
 //
@@ -219,7 +227,8 @@ void algorithmFIFO () {
             o.acceleration = -1;
         }
         o.speed = speed;
-        sendingMsgCar (cars[i], 0, o);
+        o.type = 0;
+        sendingMsgCar (cars[i], o);
     }
 }
 
@@ -243,17 +252,13 @@ void updateCarIntervalsBySpeed (Car* c, int new_speed) {
     c->time_out = c->time_in + ((float) c->length) / ((float) new_speed);
 }
 
-void updateCarPosition (map road, Car* c, float newposition, float delay) {
-    c->position = newposition + (2 * delay * ((float) c->speed));
-}
-
 void updateCarIntervals (Car* c) {
     if (c->x_direction != 0) {
-        c->time_in = (((float) road.x_cross) - c->position) / ((float) (c->speed * c->x_direction));
+        c->time_in = (((float) road.x_cross) - (DELAY * c->position)) / ((float) (c->speed * c->x_direction));
         c->time_out = c->time_in + (((float) c->length) / ((float) c->speed));
     }
     else {
-        c->time_in = (((float) road.y_cross) - c->position) / ((float) (c->speed * c->y_direction));
+        c->time_in = (((float) road.y_cross) - (DELAY * c->position)) / ((float) (c->speed * c->y_direction));
         c->time_out = c->time_in + (((float) c->length) / ((float) c->speed));
     }
 }

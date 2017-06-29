@@ -2,7 +2,9 @@
 
 int main(int argc, char * argv[]) {
     char *host;
-    
+
+    initializeCar ();
+
     // Verificacao de argumentos
     if (argc != 2) {
         // default: localhost
@@ -32,6 +34,8 @@ int main(int argc, char * argv[]) {
     return 0;
 }
 
+// APPLICATION
+// ENTERTAINMENT
 
 void *setupEntertainmentLayer(void *pointer) {
     
@@ -95,6 +99,8 @@ void *setupEntertainmentLayer(void *pointer) {
     return 0;
 }
 
+// SECURITY
+
 void setupSecurityLayer(struct hostent *host_address) {
     
     // Lock
@@ -111,7 +117,6 @@ void setupSecurityLayer(struct hostent *host_address) {
     
     struct sockaddr_in socket_address;
     char buf[MAX_LINE];
-    int s;
     int len;
     
     // copiando endereco para string
@@ -151,43 +156,32 @@ void setupSecurityLayer(struct hostent *host_address) {
     if (pid == 0) {
         // Process to calculate my new position
         
+        time_t start_time = time (NULL);
         while (1) {
-            // TODO: MUST CALCULATE CAR NEW POSITION
-            adjustPosition();
-            car.speed       = 10;
-            car.position    = 0;
-            car.length      = 1;
-            car.x_direction = 0;
-            car.y_direction = 0;
-            car.time_in     = 0;
-            car.time_out    = 0;
             
-            print("Sending params:", &car, socket_address);
+            // LOOP DE MOVIMENTO
             
-            if (write(s, &car, sizeof(Car)) < 0) {
-                printf("error: writing problem\n");
+            time_t now = time(NULL);
+            time_t diff = now - start_time;
+
+            if (((diff * 10) % (int) (CLOCK * 10)) == 0) {
+                driving(); 
+            }
+
+            if ((diff % UPDATE_TIMER) == 0) {
+                update();
             }
             
-            sleep(1);
+            //sleep(1);
         }
         
     } else {
         // Process for waiting orders from server
-        
+         
         while (1) {
-            
-            printTitle("Waiting for orders...");
-            // TODO MUST BE DEFINED HOW ORDERS WILL BE MADE
-            if ( (len = read(s, &order, sizeof(Order))) == 0) {
-                // disconnected
-                printTitle("Disconnected!");
-                exit(0);
-            } else {
-                // atualize velocidade do carro, de acordo com instrucoes recebidas
-                printTitle("Adjusting speed!");
-                adjustSpeed(&car, order);
-            }
-            
+            // WAITING FOR ORDERS
+            len = read (s, &order, sizeof(Order));
+            receivingMsg (order); 
         }
         
     }
@@ -199,21 +193,96 @@ void setupSecurityLayer(struct hostent *host_address) {
     exit(0);
 }
 
-void adjustSpeed(Car *car, Order order) {
-    switch (order.acceleration) {
-        case 1:
-            printf("must accelerate\n");
-            break;
+void connectedToServer () {
+    Message m;
+    m.type = 1;
+    m.car = self;
+    sendingMsg (m);
+}
+
+void desconnectFromServer () {
+    Message m;
+    m.type = -1;
+    m.car = self;
+    sendingMsg (m);
+    exit (0);
+}
+
+void receivingMsg (Order o) {
+    switch (o.type) {
         case -1:
-            printf("must brake\n");
+            exit(0);
             break;
         default:
-            printf("do nothing\n");
+            adjustSpeed (o.speed);
             break;
     }
 }
 
-void adjustPosition(Car *car) {
-    
+void sendingMsg (Message m) {
+    if (write(s, &m, sizeof(Message)) < 0) {
+        printf ("error: writing problem\n");
+    }
 }
 
+
+// ALGORITHM
+void initializeCar () {
+    srand (time(NULL));
+
+    self.speed = rand() % 7 + 1;
+    self.length = rand() % 5 + 1;
+    if (rand() % 2 == 0) {
+        if (rand() % 2 == 0) {
+            self.x_direction = 1;
+            self.position = 0;
+        }
+        else {
+            self.x_direction = -1;
+            self.position = (float) road.x_size;
+        }
+    }
+    else {
+        if (rand() % 2 == 0) {
+            self.y_direction = 1;
+            self.position = 0;
+        }
+        else {
+            self.y_direction = -1;
+            self.position = (float) road.y_size;
+        }
+    }
+
+}
+
+void driving () {
+    if (self.x_direction != 0) {
+        self.position = self.position + (CLOCK * ((float) self.speed * self.x_direction));
+        if (self.position - (float) road.x_cross < (float) self.length / 2 || 
+                (float) road.x_cross - self.position < (float) self.length / 2) {
+            // esta no cruzamento
+            printf ("Crossing!\n"); 
+        }
+        if (self.position > (float) road.x_size || self.position < 0) desconnectFromServer ();
+    }
+    else {
+        self.position = self.position + (CLOCK * ((float) self.speed * self.y_direction));
+        if (self.position - (float) road.y_cross < (float) self.length / 2 || 
+                (float) road.y_cross - self.position < (float) self.length / 2) {
+            // esta no cruzamento
+            printf ("Crossing!\n"); 
+        }
+        if (self.position > (float) road.y_size || self.position < 0) desconnectFromServer ();
+    }
+}
+
+void adjustSpeed (int new_speed) {
+    self.speed = new_speed;
+}
+
+void update () {
+    Message m;
+    m.car = self;
+    m.type = 0;
+    sendingMsg (m);
+}
