@@ -1,32 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "common.h"
+
+#define MAX_PENDING 5
+#define BACKLOG 10
+
+#undef FD_SETSIZE
+#define FD_SETSIZE 10
 
 // DEFINITIONS
 
-#define MAXCARS 100 
-
-// STRUCTS
-
-struct car {
-    int speed;
-    int position;
-    int x_direction;
-    int y_direction;
-    float time_in;
-    float time_out;
-};
-typedef struct car car;
-
-struct map { 
-    int xsize;
-    int ysize;
-    int xcross;
-    int ycross;
-    int* x;
-    int* y;
-};
-typedef struct map map;
+#define MAXCARS 100
 
 // FUNCTIONS
 map readMap ();
 void printMap (map road);
+int setupServer();
