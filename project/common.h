@@ -85,6 +85,8 @@ void printCar (Car* car) {
         printf("Y           : %d\n", car->y_direction);
         printf("Time_in     : %f\n", car->time_in);
         printf("Time_out    : %f\n", car->time_out);
+        printf("Index       : %d\n", car->index);
+        printf("Socket      : %d\n", car->socket);
     }
 }
 
