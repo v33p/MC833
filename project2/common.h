@@ -11,7 +11,7 @@
 #include <arpa/inet.h>
 
 #define PORT 10000
-#define SPEED_LIMIT 7
+#define SPEED_LIMIT 10
 
 #define max(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
 #define min(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _b : _a; })
@@ -74,14 +74,7 @@ void printTitle(char *title) {
     printf("%s\n", title);
 }
 
-void print(char *title, Car *car, struct sockaddr_in socket_address) {
-    printTitle(title);
-    printf("at address  : %d.%d.%d.%d\n",
-           socket_address.sin_addr.s_addr&0xFF,
-           (socket_address.sin_addr.s_addr&0xFF00)>>8,
-           (socket_address.sin_addr.s_addr&0xFF0000)>>16,
-           (socket_address.sin_addr.s_addr&0xFF000000)>>24);
-    printf("at port     : %d\n", socket_address.sin_port);
+void printCar (Car* car) {
     if (car != NULL) {
         printf("\nCar info:\n");
         
@@ -93,4 +86,22 @@ void print(char *title, Car *car, struct sockaddr_in socket_address) {
         printf("Time_in     : %f\n", car->time_in);
         printf("Time_out    : %f\n", car->time_out);
     }
+}
+
+void print(char *title, Car *car, struct sockaddr_in socket_address) {
+    printTitle(title);
+    printf("at address  : %d.%d.%d.%d\n",
+           socket_address.sin_addr.s_addr&0xFF,
+           (socket_address.sin_addr.s_addr&0xFF00)>>8,
+           (socket_address.sin_addr.s_addr&0xFF0000)>>16,
+           (socket_address.sin_addr.s_addr&0xFF000000)>>24);
+    printf("at port     : %d\n", socket_address.sin_port);
+    printCar (car);
+}
+
+void initiateMap () {
+    road.x_size = 100;
+    road.y_size = 100;
+    road.x_cross = 50;
+    road.y_cross = 50;
 }

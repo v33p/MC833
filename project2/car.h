@@ -30,5 +30,8 @@ void sendingMsg (Message m);
 // ALGORITIHM
 void initializeCar ();
 void driving ();
+void endOfTheRoad ();
+void crossingRoad ();
 void adjustSpeed (int new_speed);
 void update ();
+
