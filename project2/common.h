@@ -53,7 +53,7 @@ void print(char *title, Car *car, struct sockaddr_in socket_address) {
         printf("\nCar info:\n");
         
         printf("Speed       : %d\n", car->speed);
-        printf("Position    : %d\n", car->position);
+        printf("Position    : %f\n", car->position);
         printf("Length      : %d\n", car->length);
         printf("X           : %d\n", car->x_direction);
         printf("Y           : %d\n", car->y_direction);
