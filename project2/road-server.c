@@ -23,7 +23,7 @@ int setupServer() {
     
     int i, j;
     
-    int sockfd, cliente_num, maxfd, nready, clients[FD_SETSIZE];
+    int sockfd, socks, cliente_num, maxfd, nready, clients[FD_SETSIZE];
     fd_set todos_fds, novo_set;
     
     // criacao de socket passivo
@@ -127,9 +127,13 @@ int setupServer() {
                     // TODO: Voce pode manter um vetor de carros, e sempre que receber um message, atualiza na posicao correspondente (utilize variavel i para isso). Depois, calcular os conflitos e enviar mensagem para os carros acelerarem ou frearem, quando necessario
                     
                     for (j = 0; j <= cliente_num; j++) {
-                        if ( (sockfd = clients[j] ) < 0) continue;
+                        if ( i == j || (socks = clients[j] ) < 0) continue;
                         
-                        printf("andasjkdnsadnjsal\n");
+                        if (write(socks, &car, sizeof(Car)) < 0) {
+                            printf("error: writting problem\n");
+                        } else {
+                            printf("ENVIADO\n");
+                        }
                     }
                 }
                 

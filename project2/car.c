@@ -1,6 +1,10 @@
 #include "car.h"
 
 int main(int argc, char * argv[]) {
+    Car car;
+    
+    pid_t pid;
+    
     struct hostent *host_address;
     struct sockaddr_in socket_address;
     char *host;
@@ -53,15 +57,17 @@ int main(int argc, char * argv[]) {
     
     print("Connected!", NULL, socket_address);
     
-    // ler e enviar as linhas de texto
-    printTitle("PRESS s to stop: ");
-    while (1) {
-        if ((len = strlen(fgets(buf, MAX_LINE, stdin))) > 1) {
-            if (buf[0] == 's') {
-                break;
-            }
-        } else {
-            Car car;
+    
+    if ((pid = fork()) < 0) {
+        perror("error forking");
+        exit(1);
+    }
+    
+    if (pid == 0) {
+        
+        // ler e enviar as linhas de texto
+        printTitle("PRESS s to stop: ");
+        while (1) {
             car.speed       = 10;
             car.position    = 0;
             car.length      = 1;
@@ -73,10 +79,28 @@ int main(int argc, char * argv[]) {
             print("Sending params:", &car, socket_address);
             
             if (write(s, &car, sizeof(Car)) < 0) {
-                printf("error: writting problem\n");
+                printf("error: writing problem\n");
             }
+            
+            sleep(1);
         }
-        printTitle("PRESS s to stop: ");
+        
+    } else {
+        
+        while (1) {
+            
+            printTitle("Waiting for orders...");
+            if ( (len = read(s, &car, sizeof(Car))) == 0) {
+                // disconnected
+                printTitle("Disconnected!");
+                exit(0);
+            } else {
+                // atualize velocidade do carro, de acordo com instrucoes recebidas
+                printTitle("Adjusting speed!");
+            }
+            
+        }
+        
     }
     
     printTitle("STOPPED");
