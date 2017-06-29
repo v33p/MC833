@@ -145,21 +145,35 @@ int setupServer() {
     return 0;
 }
 
-// TODO: Funcao que eh chamada toda vez que um novo carro se conecta ao servidor
 void newCarConnected (Car new_car) {
     increaseCars ();
     cars[n_cars-1] = new_car;
+    cars[n_cars-1].index = current_index++;
 }
 
+void carDesconnected (Car car) {
+    decreaseCars (car.index);
+}
 
-// TODO: Funcao que eh chamada toda vez que um carro manda uma msg de informacao para o servidor
 void receivingMsgCar (Car car, int type) {
-    // nao precisa colocar nada aqui, só chama a funcao no momento certo
+    switch (type) {
+        case 1:
+            newCarConnected (car);
+            break;
+        case -1:
+            carDesconnected (car); 
+            break;
+        default:
+            updateAllCarsIntervals ();
+            algorithmFIFO ();
+            break;
+    }
+    
 }
 
-// TODO: Eu chamo essa funcoa aqui, rlx
-void sendingMsgCar (Car car, int type, int order) {
-    // Ajustar para enviar msg do servidor para o cliente
+void sendingMsgCar (Car car, int type, Order order) {
+    // Ajustar para enviar msg do servidor para o cliente car
+    // car.index e um valor unico para esse carro na aplicacao inteira
 }
 
 //
@@ -178,22 +192,34 @@ void algorithmFIFO () {
     float current_out_x = -1;
     float current_out_y = -1;
     for (int i = 0; i < n_cars; i++) {
+        int speed;
+        int old_speed = cars[i].speed;
         if (cars[i].x_direction != 0) {
             // CARRO EM X
-            int speed = calculateSpeedToFit (cars[i], current_out_y);
+            speed = calculateSpeedToFit (cars[i], current_out_y);
             updateCarIntervalsBySpeed (&cars[i], speed);
             updateCarSpeed (&cars[i], speed);
             current_out_x = max(current_out_x, cars[i].time_out);
-            // TODO envia mensagem de ordem de speed
         }
         else {
             // CARRO EM Y
-            int speed = calculateSpeedToFit (cars[i], current_out_x);
+            speed = calculateSpeedToFit (cars[i], current_out_x);
             updateCarIntervalsBySpeed (&cars[i], speed);
             updateCarSpeed (&cars[i], speed);
             current_out_y = max(current_out_y, cars[i].time_out);
-            // TODO envia mensagem de ordem de speed
         }
+        Order o;
+        if (old_speed < speed) {
+            o.acceleration = 1;
+        }
+        else if (old_speed == speed) {
+            o.acceleration = 0;
+        }
+        else {
+            o.acceleration = -1;
+        }
+        o.speed = speed;
+        sendingMsgCar (cars[i], 0, o);
     }
 }
 
@@ -260,12 +286,18 @@ void increaseCars () {
 
 void decreaseCars (int exclude) {
     Car* new = malloc (n_cars-1 * sizeof (Car));
+    int found = 0;
     for (int i = 0; i < n_cars; i++) {
-        if (i < exclude) {
-            new[i] = cars[i];
+        if (cars[i].index == exclude) {
+            found = 1;
         }
-        else if (i > exclude) {
-            new[i-1] = cars[i];
+        else {
+            if (found == 0) {
+                new[i] = cars[i];
+            }
+            else {
+                new[i-1] = cars[i];
+            }
         }
     }
     free (cars);

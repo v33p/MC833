@@ -24,10 +24,12 @@ typedef struct {
     int y_direction;
     float time_in;
     float time_out;
+    int index;
 } Car;
 
 typedef struct {
     int acceleration;
+    int speed;
 } Order;
 
 struct map { 
