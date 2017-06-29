@@ -7,7 +7,6 @@ int main (int argc, char** argv) {
     return EXIT_SUCCESS;
 }
 
-
 // NETWORK FUNCTIONS
 
 int setupServer() {
@@ -136,6 +135,7 @@ int setupServer() {
 // newCarConnected (int socket, Car new_car): Eh chamada toda vez que uma mensagem do tipo
 // cadastro chega para o servidor, entao o servidor cadastra o carro.
 void newCarConnected (int socket, Car new_car) {
+    printTitle ("New Car Connected");
     increaseCars ();
     cars[n_cars-1] = new_car;
     cars[n_cars-1].index = current_index++;
@@ -145,12 +145,14 @@ void newCarConnected (int socket, Car new_car) {
 // clientDesconnected (int socket): Quando um cliente eh desconectado, o servidor procura
 // o carro dele e desconecta o carro.
 void clientDesconnected (int socket) {
+    printTitle ("Client Desconnected");
     for (int i = 0; i < n_cars; i++)
         if (cars[i].socket == socket) carDesconnected (cars[i]);
 }
 
 // carDesconnected (Car car): Retira o carro do cadastro de carros.
 void carDesconnected (Car car) {
+    printTitle ("Car Desconnected");
     decreaseCars (car.index);
 }
 
