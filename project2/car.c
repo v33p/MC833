@@ -1,16 +1,18 @@
 #include "car.h"
 
+// APPLICATION
+// CAR
 int main(int argc, char * argv[]) {
     char *host;
 
     initializeCar ();
 
-    // Verificacao de argumentos
+    // check if host was passed as an argument
     if (argc != 2) {
-        // default: localhost
+        // default host is localhost
         host = "localhost";
     } else {
-        // atribuicao do host como paramentro
+        // if host was passed as an argument
         host = argv[1];
     }
     
@@ -19,7 +21,6 @@ int main(int argc, char * argv[]) {
         printf("error: couldn't resolve name");
         exit(1);
     }
-    
     
     // start entertainment layer
     pthread_t sniffer_thread;
@@ -34,9 +35,8 @@ int main(int argc, char * argv[]) {
     return 0;
 }
 
-// APPLICATION
+// LAYER
 // ENTERTAINMENT
-
 void *setupEntertainmentLayer(void *pointer) {
     
     while (1) {
@@ -49,7 +49,7 @@ void *setupEntertainmentLayer(void *pointer) {
         
         printTitle("Starting Entertainment Layer...");
         
-        //Create socket
+        // create socket
         sock = socket(AF_INET , SOCK_STREAM , 0);
         if (sock == -1) {
             printTitle("Could not create socket");
@@ -58,7 +58,7 @@ void *setupEntertainmentLayer(void *pointer) {
             continue;
         }
         
-        // copiando endereco para string
+        // setting server socket address
         struct in_addr a;
         while (*host_address->h_addr_list) {
             bcopy(*host_address->h_addr_list++, (char *) &a, sizeof(a));
@@ -76,12 +76,10 @@ void *setupEntertainmentLayer(void *pointer) {
             continue;
         }
         
+        // keep receiving information from radio station
         print("Started Entertainment Layer!", NULL, socket_address);
-        
-        //keep communicating with server
         while(1) {
             
-            //Receive a reply from the server
             if( recv(sock , server_reply , 2000 , 0) > 0) {
                 printTitle("Entertainment Layer:");
                 puts(server_reply);
@@ -92,15 +90,17 @@ void *setupEntertainmentLayer(void *pointer) {
             
         }
         
+        // radio was disconnected, let's try connecting again
         close(sock);
         
     }
     
+    // never executed. entertainment layer will be running while application is running
     return 0;
 }
 
+// LAYER
 // SECURITY
-
 void setupSecurityLayer(struct hostent *host_address) {
     
     // Lock
