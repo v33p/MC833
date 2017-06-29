@@ -10,7 +10,9 @@
 #define MAXCARS 100
 
 // STRUCTS
-Car* cars[MAXCARS];
+Car* cars;
+int n_cars = 0;
+map road;
 
 // NETWORK FUNCTIONS
 int setupServer ();
@@ -20,8 +22,15 @@ void sendingMsgCar (Car car, int type, int order);
 
 // ALGORITHM FUNCTIONS
 void initiateMap ();
-void calculateIntervals (map road);
+void algorithmFIFO ();
+int calculateSpeedToFit (Car c, float out);
+void updateCarIntervalsBySpeed (Car* c, int new_speed);
+void updateCarSpeed (Car* c, int new_speed);
 void updateCarPosition (map road, Car* c, float newpostion, float delay);
-map readMap ();
-void printMap (map road);
-int setupServer();
+void updateCarIntervals (Car* c);
+void updateAllCarsIntervals ();
+
+// AUX
+int compareTimeIn (const void * a, const void * b);
+void increaseCars ();
+void decreaseCars (int exclude);

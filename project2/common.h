@@ -8,6 +8,10 @@
 #include <arpa/inet.h>
 
 #define PORT 10000
+#define SPEED_LIMIT 7
+
+#define max(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
+#define min(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _b : _a; })
 #define RADIO 10001
 
 // STRUCTS
@@ -31,8 +35,6 @@ struct map {
     int y_size;
     int x_cross;
     int y_cross;
-    int* x;
-    int* y;
 };
 typedef struct map map;
 
