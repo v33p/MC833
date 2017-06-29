@@ -16,6 +16,9 @@ int s;
 // ENTERTAINMENT
 void *setupEntertainmentLayer(void *pointer);
 
+// TRAFFIC
+void *setupTrafficLayer(void *pointer);
+
 // SECURITY
 // NETWORK
 void setupSecurityLayer(struct hostent *host_address);
