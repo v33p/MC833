@@ -18,22 +18,33 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
     
+    
+    // start entertainment layer
+    pthread_t sniffer_thread;
+    if( pthread_create( &sniffer_thread , NULL ,  setupEntertainmentLayer , (void*) host_address ) < 0) {
+        perror("could not create thread");
+        return 1;
+    }
+    
+    // start security layer
     setupSecurityLayer(host_address);
-//    setupEntertainmentLayer(host_address);
     
     return 0;
 }
 
 
-void setupEntertainmentLayer(struct hostent *host_address) {
+void *setupEntertainmentLayer(void *pointer) {
+    struct hostent *host_address = (struct hostent *) pointer;
     int sock;
-    struct sockaddr_in server;
+    
+    struct sockaddr_in socket_address;
     char server_reply[2000];
     
     //Create socket
     sock = socket(AF_INET , SOCK_STREAM , 0);
     if (sock == -1) {
         printf("Could not create socket");
+        return 0;
     }
     
     // copiando endereco para string
@@ -42,16 +53,17 @@ void setupEntertainmentLayer(struct hostent *host_address) {
         bcopy(*host_address->h_addr_list++, (char *) &a, sizeof(a));
     }
     
-    server.sin_addr.s_addr = inet_addr(inet_ntoa(a));
-    server.sin_family = AF_INET;
-    server.sin_port = htons( RADIO );
+    socket_address.sin_addr.s_addr = inet_addr(inet_ntoa(a));
+    socket_address.sin_family = AF_INET;
+    socket_address.sin_port = htons( RADIO );
     
-    //Connect to remote server
-    if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0) {
-        perror("connect failed. Error");
+    // connect to remote server
+    if (connect(sock , (struct sockaddr *)&socket_address , sizeof(socket_address)) < 0) {
+        perror("Maybe Radio Station is off. Sorry!");
+        return 0;
     }
     
-    puts("Connected\n");
+    print("Started Entertainment Layer!", NULL, socket_address);
     
     //keep communicating with server
     while(1) {
@@ -62,12 +74,13 @@ void setupEntertainmentLayer(struct hostent *host_address) {
             break;
         }
         
-        puts("Server reply :");
+        printTitle("Entertainment Layer:");
         puts(server_reply);
         
     }
     
     close(sock);
+    return 0;
 }
 
 void setupSecurityLayer(struct hostent *host_address) {

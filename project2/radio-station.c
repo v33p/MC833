@@ -128,7 +128,7 @@ int main(int argc , char *argv[]) {
 }
 
 /*
- * This will handle connection for each client
+ * This will send message for all clients
  * */
 void *connection_handler(void *pointer) {
     Handler *handler = (Handler*) pointer;
