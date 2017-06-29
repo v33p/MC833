@@ -34,52 +34,64 @@ int main(int argc, char * argv[]) {
 
 
 void *setupEntertainmentLayer(void *pointer) {
-    struct hostent *host_address = (struct hostent *) pointer;
-    int sock;
     
-    struct sockaddr_in socket_address;
-    char server_reply[2000];
-    
-    //Create socket
-    sock = socket(AF_INET , SOCK_STREAM , 0);
-    if (sock == -1) {
-        printf("Could not create socket");
-        return 0;
-    }
-    
-    // copiando endereco para string
-    struct in_addr a;
-    while (*host_address->h_addr_list) {
-        bcopy(*host_address->h_addr_list++, (char *) &a, sizeof(a));
-    }
-    
-    socket_address.sin_addr.s_addr = inet_addr(inet_ntoa(a));
-    socket_address.sin_family = AF_INET;
-    socket_address.sin_port = htons( RADIO );
-    
-    // connect to remote server
-    if (connect(sock , (struct sockaddr *)&socket_address , sizeof(socket_address)) < 0) {
-        perror("Maybe Radio Station is off. Sorry!");
-        return 0;
-    }
-    
-    print("Started Entertainment Layer!", NULL, socket_address);
-    
-    //keep communicating with server
-    while(1) {
+    while (1) {
         
-        //Receive a reply from the server
-        if( recv(sock , server_reply , 2000 , 0) < 0) {
-            puts("recv failed");
-            break;
+        struct hostent *host_address = (struct hostent *) pointer;
+        int sock;
+        
+        struct sockaddr_in socket_address;
+        char server_reply[2000];
+        
+        printTitle("Starting Entertainment Layer...");
+        
+        //Create socket
+        sock = socket(AF_INET , SOCK_STREAM , 0);
+        if (sock == -1) {
+            printTitle("Could not create socket");
+            
+            sleep(5);
+            continue;
         }
         
-        printTitle("Entertainment Layer:");
-        puts(server_reply);
+        // copiando endereco para string
+        struct in_addr a;
+        while (*host_address->h_addr_list) {
+            bcopy(*host_address->h_addr_list++, (char *) &a, sizeof(a));
+        }
+        
+        socket_address.sin_addr.s_addr = inet_addr(inet_ntoa(a));
+        socket_address.sin_family = AF_INET;
+        socket_address.sin_port = htons( RADIO );
+        
+        // connect to remote server
+        if (connect(sock , (struct sockaddr *)&socket_address , sizeof(socket_address)) < 0) {
+            printTitle("Maybe Radio Station is off. Sorry!");
+            
+            sleep(5);
+            continue;
+        }
+        
+        print("Started Entertainment Layer!", NULL, socket_address);
+        
+        //keep communicating with server
+        while(1) {
+            
+            //Receive a reply from the server
+            if( recv(sock , server_reply , 2000 , 0) > 0) {
+                printTitle("Entertainment Layer:");
+                puts(server_reply);
+            } else {
+                printTitle("Stopped Entertainment Layer.");
+                break;
+            }
+            
+        }
+        
+        close(sock);
         
     }
     
-    close(sock);
     return 0;
 }
 
