@@ -46,7 +46,7 @@ int main(int argc , char *argv[]) {
     
     // thread to set weather
     pthread_t sniffer_thread;
-    if( pthread_create( &sniffer_thread , NULL ,  traffic_handler , (void*) &visibility ) < 0) {
+    if( pthread_create( &sniffer_thread , NULL ,  weather_handler , (void*) &visibility ) < 0) {
         perror("could not create thread");
         return 1;
     }
