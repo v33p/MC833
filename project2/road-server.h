@@ -13,12 +13,14 @@
 Car* cars;
 int n_cars = 0;
 map road;
+int current_index = 0;
 
 // NETWORK FUNCTIONS
 int setupServer ();
 void newCarConnected (Car new_car);
+void carDesconnected (Car car);
 void receivingMsgCar (Car car, int type);
-void sendingMsgCar (Car car, int type, int order);
+void sendingMsgCar (Car car, int type, Order order);
 
 // ALGORITHM FUNCTIONS
 void initiateMap ();
