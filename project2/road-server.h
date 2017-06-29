@@ -11,10 +11,16 @@
 // DEFINITIONS
 #define MAXCARS 100
 
-// FUNCTIONS
-void calculateIntervals (map road, car* cars);
-void updateCarPosition (map road, car c, newpostion, delay);
-void updateMapPosition (map road, car* cars);
+// NETWORK FUNCTIONS
+int setupServer ();
+void newCarConnected (Car new_car);
+void receivingMsgCar (Car car, int type);
+void sendingMsgCar (Car car, int type, int order);
+
+// ALGORITHM FUNCTIONS
+void initiateMap ();
+void calculateIntervals (map road, Car* cars);
+void updateCarPosition (map road, Car c, float newpostion, float delay);
 map readMap ();
 void printMap (map road);
 int setupServer();

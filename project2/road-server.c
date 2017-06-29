@@ -11,36 +11,10 @@ int main (int argc, char** argv) {
     return EXIT_SUCCESS;
 }
 
-void calculateIntervals (map road, Car* cars) {
-    for (int i = 0; i < MAXCARS; i++) {
-        if (cars[i].x_direction != 0) {
-            cars[i].time_in = (float(road.x_cross) - cars[i].position)/float(cars[i].speed);
-            cars[i].time_out = cars[i].time_in + (float(cars[i].length)/float(cars[i].speed));
-        }
-        else {
-            cars[i].time_in = (float(road.y_cross) - cars[i].position)/float(cars[i].speed);
-            cars[i].time_out = cars[i].time_in + (float(cars[i].length)/float(cars[i].speed));
-        }
-    }
-}
 
-void updateCarPosition (map road, car c, newposition, delay) {
-    c.position = newposition + (2 * delay * float(c.speed));
-}
-
-void updateMapPosition (map road, car* cars) {
-   for (int i = 0; i < MAXCARS; i++) {
-       if (cars[i].xdirection != 0) {
-            
-       }
-       else {
-            
-       }
-   }
-}
+// NETWORK FUNCTIONS
 
 int setupServer() {
-    
     struct sockaddr_in socket_address;
     unsigned int len;
     int s, new_s;
@@ -172,31 +146,68 @@ int setupServer() {
     return 0;
 }
 
+// TODO: Funcao que eh chamada toda vez que um novo carro se conecta ao servidor
+void newCarConnected (Car new_car) {
+    // nao precisa colocar nada aqui, só chama a funcoa no momento certo
+}
+
+
+// TODO: Funcao que eh chamada toda vez que um carro manda uma msg de informacao para o servidor
+void receivingMsgCar (Car car, int type) {
+    // nao precisa colocar nada aqui, só chama a funcao no momento certo
+}
+
+// TODO: Eu chamo essa funcoa aqui, rlx
+void sendingMsgCar (Car car, int type, int order) {
+    // Ajustar para enviar msg do servidor para o cliente
+}
+
+
+
+// ALGORITHM FUNCTIONS
+void calculateIntervals (map road, Car* cars) {
+    /*
+    for (int i = 0; i < MAXCARS; i++) {
+        if (cars[i].x_direction != 0) {
+            cars[i].time_in = float(float(road.x_cross) - cars[i].position)/float(cars[i].speed);
+            cars[i].time_out = cars[i].time_in + (float(cars[i].length)/float(cars[i].speed));
+        }
+        else {
+            cars[i].time_in = (float(road.y_cross) - cars[i].position)/float(cars[i].speed);
+            cars[i].time_out = cars[i].time_in + (float(cars[i].length)/float(cars[i].speed));
+        }
+    }*/
+}
+
+void updateCarPosition (map road, Car c, float newposition, float delay) {
+  //  c.position = newposition + (2 * delay * float(c.speed));
+}
+
 map readMap () {
     map road;
-    scanf ("%d %d %d %d", &road.xsize, &road.ysize, &road.xcross, &road.ycross);
-    road.x = malloc (road.xsize * sizeof(int));
-    road.y = malloc (road.ysize * sizeof(int));
-    for (int i = 0; i < road.xsize; i++) road.x[i] = -1;
-    for (int i = 0; i < road.ysize; i++) road.y[i] = -1;
+    scanf ("%d %d %d %d", &road.x_size, &road.y_size, &road.x_cross, &road.y_cross);
+    road.x = malloc (road.x_size * sizeof(int));
+    road.y = malloc (road.y_size * sizeof(int));
+    for (int i = 0; i < road.x_size; i++) road.x[i] = -1;
+    for (int i = 0; i < road.y_size; i++) road.y[i] = -1;
     return road;
 }
 
 void printMap (map road) {
     int i, j;
-    for (i = 0; i < road.xsize; i++) {
-        for (j = 0; j < road.ysize; j++) {
-            if (i == road.xcross && j == road.ycross) {
+    for (i = 0; i < road.x_size; i++) {
+        for (j = 0; j < road.y_size; j++) {
+            if (i == road.x_cross && j == road.y_cross) {
                 if (road.x[i] != -1 && road.y[j] != -1) printf ("C");
                 else if (road.x[j] != -1) printf ("*");
                 else if (road.y[i] != -1) printf ("*");
                 else printf ("X");
             }
-            else if (i == road.xcross) {
+            else if (i == road.x_cross) {
                 if (road.y[i] != -1) printf ("*");
                 else printf ("0");
             }
-            else if (j == road.ycross) {
+            else if (j == road.y_cross) {
                 if (road.x[j] != -1) printf ("*");
                 else printf ("0");
             }
