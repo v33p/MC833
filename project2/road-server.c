@@ -1,12 +1,8 @@
 #include "road-server.h"
 
 int main (int argc, char** argv) {
+    initiateMap();
     setupServer();
-    
-//    map road = readMap();    
-//    car* cars[MAXCARS];
-//       
-//    printMap (road); 
 
     return EXIT_SUCCESS;
 }
@@ -151,7 +147,8 @@ int setupServer() {
 
 // TODO: Funcao que eh chamada toda vez que um novo carro se conecta ao servidor
 void newCarConnected (Car new_car) {
-    // nao precisa colocar nada aqui, só chama a funcoa no momento certo
+    increaseCars ();
+    cars[n_cars-1] = new_car;
 }
 
 
@@ -165,55 +162,113 @@ void sendingMsgCar (Car car, int type, int order) {
     // Ajustar para enviar msg do servidor para o cliente
 }
 
-
+//
 // ALGORITHM FUNCTIONS
-void calculateIntervals (map road) {
-    for (int i = 0; i < MAXCARS; i++) {
-        if (cars[i]->x_direction != 0) {
-            cars[i]->time_in = (((float) road.x_cross) - cars[i]->position)/((float) cars[i]->speed);
-            cars[i]->time_out = cars[i]->time_in + (((float) cars[i]->length)/((float) cars[i]->speed));
+//
+void initiateMap () {
+    road.x_size = 9;
+    road.y_size = 9;
+    road.x_cross = 5;
+    road.y_cross = 5;
+}
+
+void algorithmFIFO () {
+    qsort (cars, n_cars, sizeof(Car), compareTimeIn);
+    
+    float current_out_x = -1;
+    float current_out_y = -1;
+    for (int i = 0; i < n_cars; i++) {
+        if (cars[i].x_direction != 0) {
+            // CARRO EM X
+            int speed = calculateSpeedToFit (cars[i], current_out_y);
+            updateCarIntervalsBySpeed (&cars[i], speed);
+            updateCarSpeed (&cars[i], speed);
+            current_out_x = max(current_out_x, cars[i].time_out);
+            // TODO envia mensagem de ordem de speed
         }
         else {
-            cars[i]->time_in = (((float) road.y_cross) - cars[i]->position)/((float) cars[i]->speed);
-            cars[i]->time_out = cars[i]->time_in + (((float) cars[i]->length)/((float) cars[i]->speed));
+            // CARRO EM Y
+            int speed = calculateSpeedToFit (cars[i], current_out_x);
+            updateCarIntervalsBySpeed (&cars[i], speed);
+            updateCarSpeed (&cars[i], speed);
+            current_out_y = max(current_out_y, cars[i].time_out);
+            // TODO envia mensagem de ordem de speed
         }
     }
+}
+
+int calculateSpeedToFit (Car c, float out) {
+    if (out == -1) {
+        return SPEED_LIMIT;
+    }
+    else {
+        float position = c.time_in * c.speed;
+        return position / out;
+    }
+}
+
+void updateCarSpeed (Car* c, int new_speed) {
+    c->speed = new_speed; 
+}
+
+void updateCarIntervalsBySpeed (Car* c, int new_speed) {
+    float position = c->time_in * c->speed;
+    c->time_in = position / ((float) new_speed);
+    c->time_out = c->time_in + ((float) c->length) / ((float) new_speed);
 }
 
 void updateCarPosition (map road, Car* c, float newposition, float delay) {
     c->position = newposition + (2 * delay * ((float) c->speed));
 }
 
-map readMap () {
-    map road;
-    scanf ("%d %d %d %d", &road.x_size, &road.y_size, &road.x_cross, &road.y_cross);
-    road.x = malloc (road.x_size * sizeof(int));
-    road.y = malloc (road.y_size * sizeof(int));
-    for (int i = 0; i < road.x_size; i++) road.x[i] = -1;
-    for (int i = 0; i < road.y_size; i++) road.y[i] = -1;
-    return road;
+void updateCarIntervals (Car* c) {
+    if (c->x_direction != 0) {
+        c->time_in = (((float) road.x_cross) - c->position) / ((float) (c->speed * c->x_direction));
+        c->time_out = c->time_in + (((float) c->length) / ((float) c->speed));
+    }
+    else {
+        c->time_in = (((float) road.y_cross) - c->position) / ((float) (c->speed * c->y_direction));
+        c->time_out = c->time_in + (((float) c->length) / ((float) c->speed));
+    }
 }
 
-void printMap (map road) {
-    int i, j;
-    for (i = 0; i < road.x_size; i++) {
-        for (j = 0; j < road.y_size; j++) {
-            if (i == road.x_cross && j == road.y_cross) {
-                if (road.x[i] != -1 && road.y[j] != -1) printf ("C");
-                else if (road.x[j] != -1) printf ("*");
-                else if (road.y[i] != -1) printf ("*");
-                else printf ("X");
-            }
-            else if (i == road.x_cross) {
-                if (road.y[i] != -1) printf ("*");
-                else printf ("0");
-            }
-            else if (j == road.y_cross) {
-                if (road.x[j] != -1) printf ("*");
-                else printf ("0");
-            }
-            else printf (" ");
-        }
-        printf("\n");
+void updateAllCarsIntervals () {
+    for (int i = 0; i < n_cars; i++) {
+        updateCarIntervals (&cars[i]);
     }
+}
+
+// AUX
+int compareTimeIn (const void * a, const void * b) {
+    Car *carA = (Car *)a;
+    Car *carB = (Car *)b;
+
+    if (carA->time_in < carB->time_in) return -1;
+    else if (carA->time_in == carB->time_in) return 0;
+    else return 1;
+}
+
+void increaseCars () {
+    Car* new = malloc (n_cars+1 * sizeof (Car));
+    for (int i = 0; i < n_cars; i++) {
+        new[i] = cars[i];
+    }
+    free (cars);
+    cars = new;
+    n_cars++;
+}
+
+void decreaseCars (int exclude) {
+    Car* new = malloc (n_cars-1 * sizeof (Car));
+    for (int i = 0; i < n_cars; i++) {
+        if (i < exclude) {
+            new[i] = cars[i];
+        }
+        else if (i > exclude) {
+            new[i-1] = cars[i];
+        }
+    }
+    free (cars);
+    cars = new;
+    n_cars--;
 }
