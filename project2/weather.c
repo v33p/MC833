@@ -128,7 +128,7 @@ int main(int argc , char *argv[]) {
     return 0;
 }
 
-void *traffic_handler(void *pointer) {
+void *weather_handler(void *pointer) {
     int *visibility = (int*) pointer;
     
     while (1) {
