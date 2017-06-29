@@ -123,6 +123,8 @@ int setupServer() {
                     /* imprime ip e porta do cliente, e as informacoes do carro */
                     print("Received new message!", &car, socket_address);
                     
+                    // TODO: Ajustar conforme necessidades.
+                    receivingMsgCar(car, 0);
                     
                     // TODO: Voce pode manter um vetor de carros, e sempre que receber um message, atualiza na posicao correspondente (utilize variavel i para isso). Depois, calcular os conflitos e enviar mensagem para os carros acelerarem ou frearem, quando necessario
                     
