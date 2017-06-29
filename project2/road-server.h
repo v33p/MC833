@@ -20,7 +20,7 @@ int setupServer ();
 void newCarConnected (int socket, Car new_car);
 void clientDesconnected (int socket);
 void carDesconnected (Car car);
-void receivingMsgCar (int socket, Car car, int type);
+void receivingMsgCar (int socket, Message m);
 void sendingMsgCar (Car car, Order order);
 
 // ALGORITHM FUNCTIONS

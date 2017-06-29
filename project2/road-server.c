@@ -121,7 +121,7 @@ int setupServer() {
                     /* imprime ip e porta do cliente, e as informacoes do carro */
                     print("Received new message!", &m.car, socket_address);
 
-                    receivingMsgCar(clients[i], m.car, m.type);
+                    receivingMsgCar(clients[i], m);
                 }
                 
                 // não há mais descritores para ler
@@ -326,7 +326,7 @@ void decreaseCars (int exclude) {
 void printCars () {
     printTitle ("Car Vectors");
     for (int i = 0; i < n_cars; i++) {
-        printCar (cars[i]);
+        printCar (&cars[i]);
     }
     printTitle (""); 
 }
