@@ -11,15 +11,15 @@ int main (int argc, char** argv) {
     return EXIT_SUCCESS;
 }
 
-void calculateIntervals (map road, car* cars) {
+void calculateIntervals (map road, Car* cars) {
     for (int i = 0; i < MAXCARS; i++) {
-        if (cars[i].xdirection != 0) {
-            cars[i].time_in = float(road.xcross - cars[i].position)/float(cars[i].speed);
-            cars[i].time_out = cars[i].time_in + (1.0/float(cars[i].speed));
+        if (cars[i].x_direction != 0) {
+            cars[i].time_in = (float(road.x_cross) - cars[i].position)/float(cars[i].speed);
+            cars[i].time_out = cars[i].time_in + (float(cars[i].length)/float(cars[i].speed));
         }
         else {
-            cars[i].time_in = float(road.ycross - cars[i].position)/float(cars[i].speed);
-            cars[i].time_out = cars[i].time_in + (1.0/float(cars[i].speed));
+            cars[i].time_in = (float(road.y_cross) - cars[i].position)/float(cars[i].speed);
+            cars[i].time_out = cars[i].time_in + (float(cars[i].length)/float(cars[i].speed));
         }
     }
 }

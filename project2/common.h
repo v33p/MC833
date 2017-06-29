@@ -13,7 +13,7 @@
 
 typedef struct {
     int speed;
-    int position;
+    float position;
     int length;
     int x_direction;
     int y_direction;
@@ -22,10 +22,10 @@ typedef struct {
 } Car;
 
 struct map { 
-    int xsize;
-    int ysize;
-    int xcross;
-    int ycross;
+    int x_size;
+    int y_size;
+    int x_cross;
+    int y_cross;
     int* x;
     int* y;
 };
