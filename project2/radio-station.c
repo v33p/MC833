@@ -131,7 +131,7 @@ void *connection_handler(void *pointer) {
     
     // text to be transmitted to bored drivers in transit
     FILE *file = fopen("entertainment.txt", "r");
-    char buf[100];
+    char buf[RADIO_BUFFER];
     
     int i;
     int socket;
@@ -149,8 +149,8 @@ void *connection_handler(void *pointer) {
             write(socket , buf , strlen(buf));
         }
         
-        // wait, giving enough time to driver to read text.
-        sleep(3);
+        // wait (miliseconds), giving enough time to driver to read text.
+        sleep_ms(200);
     }
     
     return 0;

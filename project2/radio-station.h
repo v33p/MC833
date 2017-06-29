@@ -3,6 +3,7 @@
 #include<pthread.h>
 
 #define BACKLOG 10
+#define RADIO_BUFFER 5
 
 typedef struct {
     int *clients;

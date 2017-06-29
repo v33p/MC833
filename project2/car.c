@@ -1,4 +1,5 @@
 #include "car.h"
+#include <time.h>
 
 // APPLICATION
 // CAR
@@ -39,13 +40,19 @@ int main(int argc, char * argv[]) {
 // ENTERTAINMENT
 void *setupEntertainmentLayer(void *pointer) {
     
+    // buffer to print entertainment
+    clock_t tic;
+    clock_t toc;
+    char buffer[ENTERTAINMENT_BUFFER];
+    
+    // socket variables
+    struct hostent *host_address = (struct hostent *) pointer;
+    int sock;
+    
+    struct sockaddr_in socket_address;
+    char information[ENTERTAINMENT_INFORMATION];
+    
     while (1) {
-        
-        struct hostent *host_address = (struct hostent *) pointer;
-        int sock;
-        
-        struct sockaddr_in socket_address;
-        char server_reply[2000];
         
         printTitle("Starting Entertainment Layer...");
         
@@ -78,11 +85,27 @@ void *setupEntertainmentLayer(void *pointer) {
         
         // keep receiving information from radio station
         print("Started Entertainment Layer!", NULL, socket_address);
+        bzero(buffer, sizeof(buffer));
+        tic = clock();
+        
         while(1) {
             
-            if( recv(sock , server_reply , 2000 , 0) > 0) {
-                printTitle("Entertainment Layer:");
-                puts(server_reply);
+            if( recv(sock , information , ENTERTAINMENT_INFORMATION , 0) > 0) {
+                // append information to buffer
+                
+                strcat(buffer, information);
+                toc = clock();
+                
+                // if 1000 clocks has passed or buffer is almost full, then print
+                if (toc - tic > ENTERTAINMENT_MAX_CLOCK || strlen(buffer) > 0.9 * ENTERTAINMENT_BUFFER) {
+                    printTitle("Entertainment Layer:");
+                    puts(buffer);
+                    
+                    bzero(buffer, sizeof(buffer));
+                    tic = clock();
+                }
+                
+                
             } else {
                 printTitle("Stopped Entertainment Layer.");
                 break;
