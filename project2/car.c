@@ -12,7 +12,7 @@ int main(int argc, char * argv[]) {
         host = argv[1];
     }
     
-    setupSecurityLayer(host)
+    setupSecurityLayer(host);
     
     return 0;
 }
@@ -23,7 +23,7 @@ void setupSecurityLayer(char *host) {
     pthread_mutex_t lock;
     if (pthread_mutex_init(&lock, NULL) != 0){
         printf("\n mutex init failed\n");
-        return 1;
+        exit(1);
     }
     
     Car car;
@@ -131,15 +131,15 @@ void setupSecurityLayer(char *host) {
 }
 
 void adjustSpeed(Car *car, Order order) {
-    switch (order) {
+    switch (order.acceleration) {
         case 1:
-            printf("must accelerate");
+            printf("must accelerate\n");
             break;
         case -1:
-            printf("must brake");
-            break
+            printf("must brake\n");
+            break;
         default:
-            printf("do nothing");
+            printf("do nothing\n");
             break;
     }
 }
