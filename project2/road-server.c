@@ -164,24 +164,22 @@ void sendingMsgCar (Car car, int type, int order) {
 }
 
 
-
 // ALGORITHM FUNCTIONS
-void calculateIntervals (map road, Car* cars) {
-    /*
+void calculateIntervals (map road) {
     for (int i = 0; i < MAXCARS; i++) {
-        if (cars[i].x_direction != 0) {
-            cars[i].time_in = float(float(road.x_cross) - cars[i].position)/float(cars[i].speed);
-            cars[i].time_out = cars[i].time_in + (float(cars[i].length)/float(cars[i].speed));
+        if (cars[i]->x_direction != 0) {
+            cars[i]->time_in = (((float) road.x_cross) - cars[i]->position)/((float) cars[i]->speed);
+            cars[i]->time_out = cars[i]->time_in + (((float) cars[i]->length)/((float) cars[i]->speed));
         }
         else {
-            cars[i].time_in = (float(road.y_cross) - cars[i].position)/float(cars[i].speed);
-            cars[i].time_out = cars[i].time_in + (float(cars[i].length)/float(cars[i].speed));
+            cars[i]->time_in = (((float) road.y_cross) - cars[i]->position)/((float) cars[i]->speed);
+            cars[i]->time_out = cars[i]->time_in + (((float) cars[i]->length)/((float) cars[i]->speed));
         }
-    }*/
+    }
 }
 
-void updateCarPosition (map road, Car c, float newposition, float delay) {
-  //  c.position = newposition + (2 * delay * float(c.speed));
+void updateCarPosition (map road, Car* c, float newposition, float delay) {
+    c->position = newposition + (2 * delay * ((float) c->speed));
 }
 
 map readMap () {
