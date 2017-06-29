@@ -9,9 +9,9 @@
 
 struct car {
     int speed;
-    int position;
-    int x_direction;
-    int y_direction;
+    float position;
+    int xdirection;
+    int ydirection;
     float time_in;
     float time_out;
 };
@@ -28,5 +28,8 @@ struct map {
 typedef struct map map;
 
 // FUNCTIONS
+void calculateIntervals (map road, car* cars);
+void updateCarPosition (map road, car c, newpostion, delay);
+void updateMapPosition (map road, car* cars);
 map readMap ();
 void printMap (map road);
