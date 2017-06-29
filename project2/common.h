@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 
 #define PORT 10000
+#define RADIO 10001
 
 // STRUCTS
 

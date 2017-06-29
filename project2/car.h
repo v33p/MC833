@@ -5,6 +5,8 @@
 
 
 // Functions
-void setupSecurityLayer(char *host);
+void setupSecurityLayer(struct hostent *host_address);
 void adjustSpeed(Car *car, Order order);
 void adjustPosition();
+
+void setupEntertainmentLayer(struct hostent *host_address);
