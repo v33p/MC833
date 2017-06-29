@@ -12,12 +12,65 @@ int main(int argc, char * argv[]) {
         host = argv[1];
     }
     
-    setupSecurityLayer(host);
+    struct hostent *host_address = gethostbyname(host);
+    if (!host_address) {
+        printf("error: couldn't resolve name");
+        exit(1);
+    }
+    
+    setupSecurityLayer(host_address);
+//    setupEntertainmentLayer(host_address);
     
     return 0;
 }
 
-void setupSecurityLayer(char *host) {
+
+void setupEntertainmentLayer(struct hostent *host_address) {
+    int sock;
+    struct sockaddr_in server;
+    char server_reply[2000];
+    
+    //Create socket
+    sock = socket(AF_INET , SOCK_STREAM , 0);
+    if (sock == -1) {
+        printf("Could not create socket");
+    }
+    
+    // copiando endereco para string
+    struct in_addr a;
+    while (*host_address->h_addr_list) {
+        bcopy(*host_address->h_addr_list++, (char *) &a, sizeof(a));
+    }
+    
+    server.sin_addr.s_addr = inet_addr(inet_ntoa(a));
+    server.sin_family = AF_INET;
+    server.sin_port = htons( RADIO );
+    
+    //Connect to remote server
+    if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0) {
+        perror("connect failed. Error");
+    }
+    
+    puts("Connected\n");
+    
+    //keep communicating with server
+    while(1) {
+        
+        //Receive a reply from the server
+        if( recv(sock , server_reply , 2000 , 0) < 0) {
+            puts("recv failed");
+            break;
+        }
+        
+        puts("Server reply :");
+        puts(server_reply);
+        
+    }
+    
+    close(sock);
+}
+
+void setupSecurityLayer(struct hostent *host_address) {
     
     // Lock
     pthread_mutex_t lock;
@@ -31,19 +84,10 @@ void setupSecurityLayer(char *host) {
     
     pid_t pid;
     
-    struct hostent *host_address;
     struct sockaddr_in socket_address;
     char buf[MAX_LINE];
     int s;
     int len;
-    
-    // resolvendo nomes
-    host_address = gethostbyname(host);
-    
-    if (!host_address) {
-        printf("error: couldn't resolve name");
-        exit(1);
-    }
     
     // copiando endereco para string
     struct in_addr a;
