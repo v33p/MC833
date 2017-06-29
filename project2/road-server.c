@@ -133,6 +133,8 @@ int setupServer() {
     return 0;
 }
 
+// newCarConnected (int socket, Car new_car): Eh chamada toda vez que uma mensagem do tipo
+// cadastro chega para o servidor, entao o servidor cadastra o carro.
 void newCarConnected (int socket, Car new_car) {
     increaseCars ();
     cars[n_cars-1] = new_car;
@@ -140,30 +142,36 @@ void newCarConnected (int socket, Car new_car) {
     cars[n_cars-1].socket = socket;
 }
 
+// clientDesconnected (int socket): Quando um cliente eh desconectado, o servidor procura
+// o carro dele e desconecta o carro.
 void clientDesconnected (int socket) {
     for (int i = 0; i < n_cars; i++)
         if (cars[i].socket == socket) carDesconnected (cars[i]);
 }
 
+// carDesconnected (Car car): Retira o carro do cadastro de carros.
 void carDesconnected (Car car) {
     decreaseCars (car.index);
 }
 
-void receivingMsgCar (int socket, Car car, int type) {
-    switch (type) {
+// receivingMsgCar (int socket, Message m): Eh chamada toda vez que o server recebe uma 
+// mensagem de um socket, nela o server filtra pelo tipo e executa as devidas tarefas.
+void receivingMsgCar (int socket, Message m) {
+    switch (m.type) {
         case 1:
-            newCarConnected (socket, car);
+            newCarConnected (socket, m.car);
             break;
         case -1:
-            carDesconnected (car); 
+            carDesconnected (m.car); 
             break;
         default:
-            updateAllCarsIntervals ();
             algorithmFIFO ();
             break;
     }
 }
 
+// sendingMsgCar (Car car, Order order): Essa funcao envia uma mensagem para o carro
+// car com o valor de ordem
 void sendingMsgCar (Car car, Order order) {
     if (write (car.socket, &order, sizeof(Order))) {
         printf ("error: writting problem\n");
@@ -173,7 +181,15 @@ void sendingMsgCar (Car car, Order order) {
 //
 // ALGORITHM FUNCTIONS
 //
+
+// algorithmFIFO (): Este eh o kernel do problema de controle de cruzamento,
+// a ideia do algoritmo eh uma solucao gulosa nao-otima. O server ordena os carros
+// por ordem de previsao de chegada no cruzamento e o primeiro que entra sera
+// o primeiro que vai sair. Se ocorrer algum conflito, o que primeiro chegou no
+// cruzamento tem preferencia.
 void algorithmFIFO () {
+    updateAllCarsIntervals ();
+    printCars ();
     qsort (cars, n_cars, sizeof(Car), compareTimeIn);
     
     float current_out_x = -1;
@@ -211,6 +227,9 @@ void algorithmFIFO () {
     }
 }
 
+// calculateSpeedToFit (Car c, float out): Essa funcao calcula a velocidade
+// necessaria do carro para ele nao conflitar com o ultimo carro que esta 
+// passando no cruzamento.
 int calculateSpeedToFit (Car c, float out) {
     if (out == -1) {
         return SPEED_LIMIT;
@@ -221,16 +240,23 @@ int calculateSpeedToFit (Car c, float out) {
     }
 }
 
+// updateCarSpeed (Car *c, int new_speed): Essa funcao atualiza o valor de 
+// velocidade de um carro.
 void updateCarSpeed (Car* c, int new_speed) {
     c->speed = new_speed; 
 }
 
+// updateCarIntervalsBySpeed (Car* c, int new_speed): Essa funcao atualiza
+// os intervalos de entrada e saida do cruzamento de um carro baseado numa 
+// nova velocidade.
 void updateCarIntervalsBySpeed (Car* c, int new_speed) {
     float position = c->time_in * c->speed;
     c->time_in = position / ((float) new_speed);
     c->time_out = c->time_in + ((float) c->length) / ((float) new_speed);
 }
 
+// updateCarIntervals (Car* c): Essa funcao atualiza os intervalos de entrada
+// e de saida do cruzamento de um carro.
 void updateCarIntervals (Car* c) {
     if (c->x_direction != 0) {
         c->time_in = (((float) road.x_cross) - (DELAY * c->position)) / ((float) (c->speed * c->x_direction));
@@ -242,6 +268,8 @@ void updateCarIntervals (Car* c) {
     }
 }
 
+// updateAllCarsIntervals (): Essa funcao atualiza os intervalos de todos os
+// carros.
 void updateAllCarsIntervals () {
     for (int i = 0; i < n_cars; i++) {
         updateCarIntervals (&cars[i]);
@@ -249,6 +277,8 @@ void updateAllCarsIntervals () {
 }
 
 // AUX
+// compareTimeIn (const void * a, const void * b): Funcao auxiliar para o 
+// quicksort.
 int compareTimeIn (const void * a, const void * b) {
     Car *carA = (Car *)a;
     Car *carB = (Car *)b;
@@ -258,6 +288,7 @@ int compareTimeIn (const void * a, const void * b) {
     else return 1;
 }
 
+// increaseCars (): Aumenta o tamanho do vetor de carros em 1.
 void increaseCars () {
     Car* new = malloc (n_cars+1 * sizeof (Car));
     for (int i = 0; i < n_cars; i++) {
@@ -269,6 +300,8 @@ void increaseCars () {
     printCars ();
 }
 
+// decreaseCars (int exclude): Decresce o tamanho do vetor de carros em 1,
+// excluindo o carro com index exclude.
 void decreaseCars (int exclude) {
     Car* new = malloc (n_cars-1 * sizeof (Car));
     int found = 0;
@@ -293,7 +326,7 @@ void decreaseCars (int exclude) {
 void printCars () {
     printTitle ("Car Vectors");
     for (int i = 0; i < n_cars; i++) {
-        printf ("Carro %d: %d\n", i, cars[i].index);
+        printCar (cars[i]);
     }
     printTitle (""); 
 }
